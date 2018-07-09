@@ -3,9 +3,11 @@ var path = require('path');
 var favicon = require('serve-favicon');
 var logger = require('morgan');
 var bodyParser = require('body-parser');
-
 var book = require('./routes/books');
 var app = express();
+
+var mongoose = require('mongoose');
+mongoose.Promise = require('bluebird');
 
 app.use(logger('dev'));
 app.use(bodyParser.json());
@@ -14,6 +16,11 @@ app.use(express.static(path.join(__dirname, 'build')));
 
 app.use('/api/book', book);
 
+mongoose.connect('mongodb://localhost/logindb', {
+    //useMongoClient: true,
+    promiseLibrary: require('bluebird')})
+    .then(()=> console.log('connection successful'))
+    .catch((err) => console.error(err));
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
   var err = new Error('Not Found');
@@ -29,7 +36,11 @@ app.use(function(err, req, res, next) {
 
   // render the error page
   res.status(err.status || 500);
-  res.render('error');
+  //res.render('error');
+  res.json({
+    message: err.message,
+    error: err
+  });
 });
 
 module.exports = app;
